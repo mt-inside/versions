@@ -1,4 +1,5 @@
 import requests
+import os
 
 from itertools import groupby, islice
 from distutils.version import LooseVersion
@@ -67,3 +68,8 @@ def kernel_org_mainline_stable():
     print("Latest Stable: {} ({})".format(stable['version'], stable['released']['isodate']))
 
     print("")
+
+def gke_masters():
+    print("== GKE ==")
+
+    os.system("gcloud container get-server-config --zone=us-west1-b | head -n 10")
