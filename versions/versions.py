@@ -1,47 +1,71 @@
 import requests
 import os
+import json
+import re
 
+from pprint import pprint
 from itertools import groupby, islice
 from distutils.version import LooseVersion
 
-def github_releases_prerelease_ga(owner, repo):
-    print("== {} ==".format(repo))
-
-    response = requests.get("https://api.github.com/repos/{}/{}/releases".format(owner,repo))
-    rs = response.json()
-
-    try:
-        pres = filter(lambda r: r['prerelease'], rs)
-        pre = next(pres)
-        pre_render = "{} - \"{}\" - {}".format(pre['tag_name'], pre['name'], pre['published_at'])
-    except StopIteration:
-        pre_render = None
-    print("Prerelease: {}".format(pre_render))
-
-    try:
-        gas = filter(lambda r: not r['prerelease'], rs)
-        ga = next(gas)
-        ga_render = "{} - \"{}\" - {}".format(ga['tag_name'], ga['name'], ga['published_at'])
-    except StopIteration:
-        ga_render = None
-    print("GA: {}".format(ga_render))
-
-    print("")
-
-
 def github_releases_groupby_maj_min(owner, repo, depth, count):
-    print("== {} ==".format(repo))
+    def format_release(r):
+        if r is None:
+            return ""
+        else:
+            return '{} ({})'.format(r['ver'], r['date'])
+
 
     response = requests.get("https://api.github.com/repos/{}/{}/releases".format(owner,repo))
     rs = response.json()
 
-    names = map(lambda r: r['name'][1:], rs)
-    vers = map(lambda name: LooseVersion(name), names)
-    s_vers = sorted(vers, reverse=True)
-    for majmin, rels in islice(groupby(s_vers, lambda v: v.version[0:depth]), count):
-        print("Latest {}: {}".format(majmin, next(rels)))
+    arrs = parse_gh_release(rs, depth, count)
 
+    print("== {} ==".format(repo))
+    for s in arrs:
+        print("{}: ".format(s['series']), end='')
+        if s['pre']:
+            print("PRE {}".format(format_release(s['pre'])), end='')
+        if s['pre'] and s['ga']:
+            print(" | ", end='')
+        if s['ga']:
+            print("GA {}".format(format_release(s['ga'])), end='')
+        print("")
     print("")
+
+def get_ver_num(s):
+    ver_num = re.compile("[0-9\.]+.*")
+    return ver_num.search(s).group()
+
+def parse_gh_release(rs, depth, count):
+    # TODO chnage to list / dict comprehensions
+    # TODO maybe fix the algorithmic complexity of this
+
+    ret = []
+
+    names = map(lambda r: { "tag": get_ver_num(r['tag_name']), "name": r['name'], "date": r['published_at'], "pre": r['prerelease']}, rs)
+    # TODO: syntax for old dict + change
+    vers = map(lambda o: { "ver": LooseVersion(o['tag']), "name": o['name'], "date": o['date'], "pre": o['pre']}, names)
+    s_vers = sorted(vers, key = lambda o: o['ver'], reverse = True)
+    for series, rels in islice(groupby(s_vers, lambda v: v['ver'].version[0:depth]), count):
+        rs = list(rels) # Walk this iterator only once
+        gas = filter(lambda r: not r['pre'], rs)
+        pres =  filter(lambda r: r['pre'], rs)
+
+        try:
+            ga = next(gas)
+        except StopIteration:
+            ga = None
+
+        try:
+            pre = next(pres)
+            if ga and pre['ver'] < ga['ver']:
+                pre = None
+        except StopIteration:
+            pre = None
+
+        ret.append({ "series": ".".join([str(i) for i in series]), "pre": pre, "ga": ga })
+
+    return ret
 
 
 def kernel_org_mainline_stable():
@@ -58,6 +82,8 @@ def kernel_org_mainline_stable():
     response = requests.get("https://www.kernel.org/releases.json")
     data = response.json()
     releases = data['releases']
+
+    # TODO groupby here
 
     #rc = single(filter(lambda r : r['moniker'] == "mainline", releases))
     rcs = filter(lambda r : r['moniker'] == "mainline", releases)
