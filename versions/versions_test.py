@@ -39,6 +39,15 @@ def test_parse_gh_release_zfs():
     assert a[1]['ga']['ver'] == "0.7.13"
 
 
+def test_parse_kernel():
+    with open('testdata/linux.json') as t:
+        rs = json.load(t)['releases']
+
+    versions.parse_kernel(rs)
+
+    assert True
+
+
 def test_ver_num():
     assert versions.get_ver_num("1.2.3") == "1.2.3"
     assert versions.get_ver_num("v1.2.3") == "1.2.3"

@@ -84,29 +84,31 @@ def parse_gh_release(rs, depth, count):
 def kernel_org_mainline_stable():
     print("== linux ==")
 
-    def single(xs):
-        assert(len(xs) == 1)
-        return xs.pop()
-
-    def latest(xs):
-        assert(len(xs) >= 1)
-        return sorted(xs, key=lambda x: x['version']).pop()
-
     response = requests.get("https://www.kernel.org/releases.json")
-    data = response.json()
-    releases = data['releases']
+    rs = response.json()['releases']
 
-    # TODO groupby here
+    vers = parse_kernel(rs)
 
-    # rc = single(filter(lambda r : r['moniker'] == "mainline", releases))
-    rcs = filter(lambda r: r['moniker'] == "mainline", releases)
-    for rc in rcs:
-        print("Latest Mainline: {} ({})".format(rc['version'], rc['released']['isodate']))
-
-    stable = latest([r for r in releases if r['moniker'] == "stable"])
-    print("Latest Stable: {} ({})".format(stable['version'], stable['released']['isodate']))
+    for m, v in vers:
+        print("{}: {}".format(m, v['version']))
 
     print("")
+
+
+def parse_kernel(rs):
+    def latest(rs):
+        s = sorted(rs, key=lambda r: LooseVersion(r['version']), reverse=True)
+        return s[0]
+
+    vers = sorted(rs, key=lambda r: r['moniker'])
+    serieses = groupby(vers, lambda v: v['moniker'])
+    # all the groups share the same underlying iterator, so have to reify
+    # carefully
+    d = {}
+    for moniker, series in serieses:
+        d[moniker] = list(series)
+
+    return [(m, latest(d[m])) for m in ["mainline", "stable", "longterm"]]
 
 
 def gke_masters():
