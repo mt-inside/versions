@@ -9,7 +9,7 @@ import versions
 versions.kernel_org_mainline_stable()
 versions.github_releases_groupby_maj_min("zfsonlinux", "zfs", 2, 2)
 versions.github_releases_groupby_maj_min("golang", "go", 2, 2)
-versions.github_releases_groupby_maj_min("kubernetes", "kubernetes", 2, 2)
+versions.github_releases_groupby_maj_min("kubernetes", "kubernetes", 2, 5)
 versions.gke_masters()
 versions.github_releases_groupby_maj_min("helm", "helm", 2, 2)
 versions.github_releases_groupby_maj_min("envoyproxy", "envoy", 2, 2)
