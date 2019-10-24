@@ -14,7 +14,7 @@ def github_releases_groupby_maj_min(owner, repo, depth, count):
             return '{} ({})'.format(r['ver'], r['date'])
 
     response = requests.get(
-            "https://api.github.com/repos/{}/{}/releases".format(owner, repo)
+        "https://api.github.com/repos/{}/{}/releases".format(owner, repo)
     )
     rs = response.json()
 
@@ -39,25 +39,19 @@ def get_ver_num(s):
 
 
 def parse_gh_release(rs, depth, count):
-    # TODO chnage to list / dict comprehensions
     # TODO maybe fix the algorithmic complexity of this
 
     ret = []
 
-    names = map(lambda r: {
-        "tag": get_ver_num(r['tag_name']),
+    vers = map(lambda r: {
+        "ver": LooseVersion(get_ver_num(r['tag_name'])),
         "name": r['name'],
         "date": r['published_at'],
         "pre": r['prerelease']
     }, rs)
-    # TODO: syntax for old dict + change
-    vers = map(lambda o: {
-        "ver": LooseVersion(o['tag']),
-        "name": o['name'],
-        "date": o['date'],
-        "pre": o['pre']
-    }, names)
+
     s_vers = sorted(vers, key=lambda o: o['ver'], reverse=True)
+
     for series, rels in islice(
         groupby(s_vers, lambda v: v['ver'].version[0:depth]),
         count
