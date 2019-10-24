@@ -1,15 +1,8 @@
 #!/usr/bin/env python3
 
-import sys
-
 import versions
 
-# fix git
-# upgrade deps
 # driver.py to fetch over network and print
-# pure functional extraction to map json-object to something printable
-# proper test runner (to read k8s.json)
-# put functinoal bit under test
 # flake8 etc
 # read gh repos from cmdline "a/b" "b/c" args
 
