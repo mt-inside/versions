@@ -2,7 +2,6 @@
 
 import fetcher
 
-# driver.py to fetch over network and print
 # date parsing and printing
 # read gh repos from cmdline "a/b" "b/c" args
 
