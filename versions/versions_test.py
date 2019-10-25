@@ -48,6 +48,16 @@ def test_parse_kernel():
     assert True
 
 
+def test_gke_masters():
+    a = versions.gke_masters()
+
+    assert a[0]['series'] == "latest"
+    assert a[0]['ver'] == "1.14.7-gke.10"
+
+    assert a[1]['series'] == "default"
+    assert a[1]['ver'] == "1.13.10-gke.0"
+
+
 def test_ver_num():
     assert versions.get_ver_num("1.2.3") == "1.2.3"
     assert versions.get_ver_num("v1.2.3") == "1.2.3"

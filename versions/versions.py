@@ -1,9 +1,13 @@
 import requests
-import os
 import re
 
 from itertools import groupby, islice
 from distutils.version import LooseVersion
+
+
+def get_ver_num(s):
+    ver_num = re.compile("[0-9.]+.*")
+    return ver_num.search(s).group()
 
 
 def github_releases_groupby_maj_min(owner, repo, depth, count):
@@ -31,11 +35,6 @@ def github_releases_groupby_maj_min(owner, repo, depth, count):
             print("GA {}".format(format_release(s['ga'])), end='')
         print("")
     print("")
-
-
-def get_ver_num(s):
-    ver_num = re.compile("[0-9.]+.*")
-    return ver_num.search(s).group()
 
 
 def parse_gh_release(rs, depth, count):
@@ -114,4 +113,41 @@ def parse_kernel(rs):
 def gke_masters():
     print("== GKE ==")
 
-    os.system("gcloud container get-server-config --zone=us-west1-b | head -n 10")
+    rs = parse_gke()
+
+    for r in rs:
+        print("{}: {}".format(r['series'], r['ver']))
+
+    print("")
+
+
+# NB: needs application-default-credentials available
+def parse_gke():
+    from googleapiclient import discovery
+    from oauth2client.client import GoogleCredentials
+
+    credentials = GoogleCredentials.get_application_default()
+
+    service = discovery.build('container', 'v1', credentials=credentials)
+
+    # Deprecated. The Google Developers Console [project ID or project
+    # number](https://support.google.com/cloud/answer/6158840).
+    # This field has been deprecated and replaced by the name field.
+    project_id = 'esqimo-adm'  # TODO: Update placeholder value.
+
+    # Deprecated. The name of the Google Compute Engine
+    # [zone](/compute/docs/zones#available) to return operations for.
+    # This field has been deprecated and replaced by the name field.
+    zone = 'europe-west2-b'  # TODO: Update placeholder value.
+
+    request = service \
+        .projects() \
+        .zones() \
+        .getServerconfig(projectId=project_id, zone=zone)
+    response = request.execute()
+
+    # TODO: Change code below to process the `response` dict:
+    return [
+        {"series": "latest", "ver": response['validMasterVersions'][0]},
+        {"series": "default", "ver": response['defaultClusterVersion']}
+    ]
