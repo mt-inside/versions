@@ -2,7 +2,6 @@
 
 import fetcher
 
-# date parsing and printing
 # read gh repos from cmdline "a/b" "b/c" args
 
 fetcher.kernel_org_mainline_stable()

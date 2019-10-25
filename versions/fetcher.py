@@ -1,7 +1,11 @@
 import requests
-from pprint import pprint
+import datetime
 
 import parser
+
+
+def elapsed(d):
+    return "{} days ago".format((datetime.datetime.now() - d).days)
 
 
 def github_releases_groupby_maj_min(owner, repo, depth, count):
@@ -9,7 +13,15 @@ def github_releases_groupby_maj_min(owner, repo, depth, count):
         if r is None:
             return ""
         else:
-            return '{} ({})'.format(r['ver'], r['date'])
+            d = datetime.datetime.strptime(
+                r['published_at'],
+                "%Y-%m-%dT%H:%M:%SZ"
+            )
+            if r['name'] and r['name'] != r['tag_name']:
+                n = '"{}", '.format(r['name'])
+            else:
+                n = ""
+            return '{} ({}{})'.format(r['ver'], n, elapsed(d))
 
     response = requests.get(
         "https://api.github.com/repos/{}/{}/releases".format(owner, repo)
@@ -40,7 +52,8 @@ def kernel_org_mainline_stable():
     vers = parser.parse_kernel(rs)
 
     for m, v in vers:
-        print("{}: {}".format(m, v['version']))
+        d = datetime.datetime.strptime(v['released']['isodate'], "%Y-%m-%d")
+        print("{}: {} ({})".format(m, v['version'], elapsed(d)))
 
     print("")
 
@@ -70,7 +83,6 @@ def gke_masters():
         .zones() \
         .getServerconfig(projectId=project_id, zone=zone)
     response = request.execute()
-    pprint(response)
 
     rs = parser.parse_gke(response)
 

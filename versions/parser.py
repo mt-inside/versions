@@ -14,13 +14,10 @@ def parse_gh_release(rs, depth, count):
 
     ret = []
 
-    vers = map(lambda r: {
-        "ver": LooseVersion(get_ver_num(r['tag_name'])),
-        "name": r['name'],
-        "date": r['published_at'],
-        "pre": r['prerelease']
-    }, rs)
-
+    vers = map(
+        lambda r: dict(ver=LooseVersion(get_ver_num(r['tag_name'])), **r),
+        rs
+    )
     s_vers = sorted(vers, key=lambda o: o['ver'], reverse=True)
 
     for series, rels in islice(
@@ -28,8 +25,8 @@ def parse_gh_release(rs, depth, count):
         count
     ):
         rs = list(rels)  # Walk this iterator only once
-        gas = filter(lambda r: not r['pre'], rs)
-        pres = filter(lambda r: r['pre'], rs)
+        gas = filter(lambda r: not r['prerelease'], rs)
+        pres = filter(lambda r: r['prerelease'], rs)
 
         try:
             ga = next(gas)
