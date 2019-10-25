@@ -1,13 +1,13 @@
 import json
 
-import versions
+import parser
 
 
 def test_parse_gh_release_k8s():
     with open('testdata/k8s.json') as t:
         rs = json.load(t)
 
-    a = versions.parse_gh_release(rs, 2, 3)
+    a = parser.parse_gh_release(rs, 2, 3)
 
     assert len(a) == 3
     assert type(a[0]) == dict
@@ -25,7 +25,7 @@ def test_parse_gh_release_zfs():
     with open('testdata/zfs.json') as t:
         rs = json.load(t)
 
-    a = versions.parse_gh_release(rs, 2, 2)
+    a = parser.parse_gh_release(rs, 2, 2)
 
     assert len(a) == 2
     assert type(a[0]) == dict
@@ -43,13 +43,20 @@ def test_parse_kernel():
     with open('testdata/linux.json') as t:
         rs = json.load(t)['releases']
 
-    versions.parse_kernel(rs)
+    a = parser.parse_kernel(rs)
 
-    assert True
+    assert a[0][0] == "mainline"
+    assert a[0][1]['version'] == "5.4-rc4"
+
+    assert a[2][0] == "longterm"
+    assert a[2][1]['version'] == "4.19.80"
 
 
 def test_gke_masters():
-    a = versions.gke_masters()
+    with open('testdata/gke.json') as t:
+        rs = json.load(t)
+
+    a = parser.parse_gke(rs)
 
     assert a[0]['series'] == "latest"
     assert a[0]['ver'] == "1.14.7-gke.10"
@@ -59,7 +66,7 @@ def test_gke_masters():
 
 
 def test_ver_num():
-    assert versions.get_ver_num("1.2.3") == "1.2.3"
-    assert versions.get_ver_num("v1.2.3") == "1.2.3"
-    assert versions.get_ver_num("1.2.3-0") == "1.2.3-0"
-    assert versions.get_ver_num("1.2.3-rc1.beta1") == "1.2.3-rc1.beta1"
+    assert parser.get_ver_num("1.2.3") == "1.2.3"
+    assert parser.get_ver_num("v1.2.3") == "1.2.3"
+    assert parser.get_ver_num("1.2.3-0") == "1.2.3-0"
+    assert parser.get_ver_num("1.2.3-rc1.beta1") == "1.2.3-rc1.beta1"
