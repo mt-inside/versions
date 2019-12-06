@@ -14,5 +14,6 @@ python3 versions
 
 TODO
 * Read list of projects from a config file
+* supply a username and API token to auth to github, then won't get rate-limited.
 
 Warning: don't run too often of you'll get rate-limited by github.
